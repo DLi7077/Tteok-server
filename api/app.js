@@ -31,8 +31,9 @@ db.sequelize.sync({ force: false });
 
 // start up the server
 if (PORT) {
-  seed();
+  seed()
   app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 } else {
   console.log("===== ERROR ====\nCREATE A .env FILE!\n===== /ERROR ====");
 }
+ 

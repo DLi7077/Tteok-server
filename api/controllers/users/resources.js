@@ -19,7 +19,7 @@ async function createUser(req, res, next) {
     description: req.body.description,
   })
     .then((createdUser) => {
-      req.body.response = createdUser.dataValues;
+      req.response = createdUser.dataValues;
     })
     .catch(next);
 
@@ -40,34 +40,32 @@ async function findAll(req, res, next) {
   await User.findAll({ where: queryParams, limit: DEFAULT_LIMIT })
     .then((users) => {
       const result = _.map(users, (user) => user.dataValues);
-      req.body.response = result;
+      req.response = result;
     })
     .catch(next);
 
   return next();
 }
 
-async function userProfile(req, res, next) {
-  const queryParams = req.query;
-
+async function userProfile(req, res, next, user_id) {
   const user = await User.findOne({
-    where: { id: queryParams.user_id },
+    where: { id: user_id },
   })
     .then((user) => user.dataValues)
     .catch(next);
   const workexps = await WorkExperience.findAll({
-    where: { user_id: queryParams.user_id },
+    where: { user_id: user_id },
   })
     .then((exps) => exps.map((exp) => exp.dataValues))
     .catch(next);
 
   const projects = await Project.findAll({
-    where: { user_id: queryParams.user_id },
+    where: { user_id: user_id },
   })
     .then((projects) => projects.map((project) => project.dataValues))
     .catch(next);
 
-  req.body.response = {
+  req.response = {
     user: user,
     work_experiences: workexps,
     projects: projects,
@@ -84,10 +82,9 @@ async function userProfile(req, res, next) {
  */
 async function presentAll(req, res) {
   const omitFields = ["password", "createdAt", "updatedAt"];
-  console.log(req.body.response);
   res.status(200);
   res.json({
-    users: _.map(req.body.response, (user) => _.omit(user, omitFields)),
+    users: _.map(req.response, (user) => _.omit(user, omitFields)),
   });
 }
 
@@ -101,7 +98,7 @@ async function presentUser(req, res) {
   const omitFields = ["password", "createdAt", "updatedAt"];
   res.status(200);
   res.json({
-    user: _.omit(req.body.response, omitFields),
+    user: _.omit(req.response, omitFields),
   });
 }
 
@@ -109,11 +106,11 @@ async function presentProfile(req, res) {
   const omitFields = ["createdAt", "updatedAt"];
   res.status(200);
   res.json({
-    profile: _.omit(req.body.response.user, [...omitFields, "password"]),
-    work_experiences: req.body.response.work_experiences.map((exp) =>
+    profile: _.omit(req.response.user, [...omitFields, "password"]),
+    work_experiences: req.response.work_experiences.map((exp) =>
       _.omit(exp, omitFields)
     ),
-    projects: req.body.response.projects.map((project) =>
+    projects: req.response.projects.map((project) =>
       _.omit(project, omitFields)
     ),
   });

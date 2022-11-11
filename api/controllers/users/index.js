@@ -24,9 +24,10 @@ const {
 //    /api comes from the file ../app.js
 //    /micro_posts comes from the file ./Users.js
 
-router.get("/all", findAll, presentAll);
-router.get("/profile", userProfile, presentProfile);
+router.param("user_id", userProfile);
 
+router.get("/profile/:user_id", userProfile, presentProfile);
+router.get("/all", findAll, presentAll);
 router.post("/create", createUser, presentUser);
 
 module.exports = router;

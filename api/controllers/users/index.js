@@ -2,7 +2,14 @@ const express = require("express");
 const router = express.Router();
 const resources = require("./resources");
 
-const { findAll, presentAll } = resources;
+const {
+  createUser,
+  findAll,
+  userProfile,
+  presentUser,
+  presentAll,
+  presentProfile,
+} = resources;
 
 // This is a simple example for providing basic CRUD routes for
 // a resource/model. It provides the following:
@@ -17,6 +24,10 @@ const { findAll, presentAll } = resources;
 //    /api comes from the file ../app.js
 //    /micro_posts comes from the file ./Users.js
 
+router.param("user_id", userProfile);
+
+router.get("/profile/:user_id", userProfile, presentProfile);
 router.get("/all", findAll, presentAll);
+router.post("/create", createUser, presentUser);
 
 module.exports = router;

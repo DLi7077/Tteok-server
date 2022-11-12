@@ -96,13 +96,13 @@ const PROJECTS = [
 const seed = async function () {
   await db.sequelize.sync({ force: true });
 
-  db.User.destroy({ where: {}, truncate: true });
-  db.WorkExperience.destroy({ where: {}, truncate: true });
-  db.Project.destroy({ where: {}, truncate: true });
+  const Models = [User, WorkExperience, Project];
 
-  await User.sync({ force: true });
-  await WorkExperience.sync({ force: true });
-  await Project.sync({ force: true });
+  // reset tables on server load
+  Models.map((model) => {
+    model.destroy({ where: {}, truncate: true });
+    model.sync({ force: true }); 
+  });
 
   /*
     Postgres only fix:
@@ -110,19 +110,15 @@ const seed = async function () {
       we have to reset our id sequences in postgres.
       (ONLY do this for Models with autoincrementing id's)
   */
+  const tables = ["User", "WorkExperience", "Project"];
+  const tableResetTasks = tables.map((table) => {
+    return db.sequelize.query(
+      `select setval('"${table}_id_seq"', (select max(id) from "${table}"), true);`
+    );
+  });
 
-  const userReset = db.sequelize.query(
-    `select setval('"User_id_seq"', (select max(id) from "User"), true);`
-  );
-  const workExpReset = db.sequelize.query(
-    `select setval('"WorkExperience_id_seq"', (select max(id) from "WorkExperience"), true);`
-  );
-  const projectReset = db.sequelize.query(
-    `select setval('"Project_id_seq"', (select max(id) from "Project"), true);`
-  );
+  await Promise.all(tableResetTasks);
 
-  await Promise.all([userReset, workExpReset, projectReset]);
-  
   // seed tables topologically
   await Promise.all(
     USERS.map(async (user) => {

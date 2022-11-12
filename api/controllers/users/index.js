@@ -3,7 +3,9 @@ const router = express.Router();
 const resources = require("./resources");
 
 const {
+  userLogin,
   createUser,
+  authenticateToken,
   findAll,
   userProfile,
   presentUser,
@@ -26,8 +28,14 @@ const {
 
 router.param("user_id", userProfile);
 
+// views
 router.get("/profile/:user_id", userProfile, presentProfile);
 router.get("/all", findAll, presentAll);
+
+// login & register
 router.post("/create", createUser, presentUser);
+router.post("/login", userLogin, authenticateToken, presentUser);
+
+
 
 module.exports = router;

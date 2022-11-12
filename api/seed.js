@@ -1,4 +1,5 @@
 const db = require("./models");
+const bcrypt = require("bcrypt");
 
 const { User, WorkExperience, Project } = db;
 
@@ -94,6 +95,7 @@ const PROJECTS = [
 
 const seed = async function () {
   await db.sequelize.sync({ force: true });
+
   db.User.destroy({ where: {}, truncate: true });
   db.WorkExperience.destroy({ where: {}, truncate: true });
   db.Project.destroy({ where: {}, truncate: true });
@@ -101,10 +103,39 @@ const seed = async function () {
   await User.sync({ force: true });
   await WorkExperience.sync({ force: true });
   await Project.sync({ force: true });
+
+  /*
+    Postgres only fix:
+      Since we provided fixed id's for our seed data,
+      we have to reset our id sequences in postgres.
+      (ONLY do this for Models with autoincrementing id's)
+  */
+
+  const userReset = db.sequelize.query(
+    `select setval('"User_id_seq"', (select max(id) from "User"), true);`
+  );
+  const workExpReset = db.sequelize.query(
+    `select setval('"WorkExperience_id_seq"', (select max(id) from "WorkExperience"), true);`
+  );
+  const projectReset = db.sequelize.query(
+    `select setval('"Project_id_seq"', (select max(id) from "Project"), true);`
+  );
+
+  await Promise.all([userReset, workExpReset, projectReset]);
+  
   // seed tables topologically
-  await Promise.all(USERS.map((user) => User.create(user)));
-  await Promise.all(WORKEXPS.map((user) => WorkExperience.create(user)));
-  await Promise.all(PROJECTS.map((user) => Project.create(user)));
+  await Promise.all(
+    USERS.map(async (user) => {
+      const saltRounds = 10;
+      const encryptedPassword = await bcrypt.hash(user.password, saltRounds);
+      return User.create({
+        ...user,
+        password: encryptedPassword,
+      });
+    })
+  );
+  await Promise.all(WORKEXPS.map((workexp) => WorkExperience.create(workexp)));
+  await Promise.all(PROJECTS.map((project) => Project.create(project)));
 };
 
 module.exports = seed;

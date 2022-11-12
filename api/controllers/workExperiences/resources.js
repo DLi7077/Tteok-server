@@ -13,7 +13,7 @@ async function create(req, res, next) {
   const workExperience = req.body.work_experience;
 
   await WorkExperience.create({
-    user_id: workExperience.user_id,
+    user_id: _.get(req,'currentUser.id'),
     company: workExperience.company,
     job_title: workExperience.job_title,
     start_month: workExperience.start_month,

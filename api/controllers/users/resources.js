@@ -1,5 +1,7 @@
 const db = require("../../models");
 const _ = require("lodash");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { User, WorkExperience, Project } = db;
 
 /**
@@ -10,10 +12,13 @@ const { User, WorkExperience, Project } = db;
  * @returns {Promise<void>} callback to next function
  */
 async function createUser(req, res, next) {
+  const saltRounds = 10;
+  const encryptedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
   await User.create({
     username: req.body.username,
     email: req.body.email,
-    password: req.body.password,
+    password: encryptedPassword,
     profile_picture_url: req.body.profile_picture_url,
     portfolio_url: req.body.portfolio_url,
     description: req.body.description,
@@ -24,6 +29,80 @@ async function createUser(req, res, next) {
     .catch(next);
 
   return next();
+}
+
+/**
+ * @description handle User login
+ * @param {Request} req HTTP Request
+ * @param {Request} res HTTP Response
+ * @param {NextFunction} next The next function to call
+ * @returns {Promise<void>} callback to next function
+ */
+async function userLogin(req, res, next) {
+  const email = _.get(req.body, "email");
+  if (!email) {
+    res.status(404).send("No email provided");
+    return;
+  }
+  const user = await User.findOne({ where: { email: email } }).then(
+    (user) => user.dataValues
+  );
+  if (!user) {
+    res.status(404).send("User not found");
+    return;
+  }
+
+  const incomingPassword = _.get(req.body, "password");
+  const expectedPassword = _.get(user, "password");
+
+  bcrypt.compare(incomingPassword, expectedPassword, (err, result) => {
+    if (err || !result) {
+      res.status(401);
+      res.send("Incorrect Password");
+      return;
+    }
+
+    const accessToken = jwt.sign(
+      _.pick(user, ["email", "id"]),
+      process.env.AUTH_SECRET
+    );
+
+    req.response = {
+      ...user,
+      accessToken: accessToken,
+    };
+
+    req.headers.authorization = `Bearer ${accessToken}`;
+
+    next();
+  });
+}
+
+/**
+ * @description Authenticates a user
+ * @param {Request} req HTTP Request
+ * @param {Request} res HTTP Response
+ * @param {NextFunction} next The next function to call
+ * @returns {Promise<void>} callback to next function
+ */
+async function authenticateToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = !!authHeader ? authHeader.split(" ")[1] : "";
+
+  if (!token) {
+    res.status(401).send("Forbidden");
+    return;
+  }
+
+  jwt.verify(token, process.env.AUTH_SECRET ?? "", async (err, user) => {
+    if (err) {
+      res.status(403).send("Invalid Token");
+    }
+
+    req.currentUser = user;
+
+    next();
+  });
 }
 
 /**
@@ -103,10 +182,10 @@ async function presentUser(req, res) {
 }
 
 async function presentProfile(req, res) {
-  const omitFields = ["createdAt", "updatedAt"];
+  const omitFields = ["password", "createdAt", "updatedAt"];
   res.status(200);
   res.json({
-    profile: _.omit(req.response.user, [...omitFields, "password"]),
+    profile: _.omit(req.response.user, omitFields),
     work_experiences: req.response.work_experiences.map((exp) =>
       _.omit(exp, omitFields)
     ),
@@ -117,6 +196,8 @@ async function presentProfile(req, res) {
 }
 
 module.exports = {
+  userLogin,
+  authenticateToken,
   createUser,
   findAll,
   userProfile,

@@ -8,7 +8,7 @@ const ProjectController = require("./projects");
 
 // Mount each controller under a specific route. These
 // will be prefixes to all routes defined inside the controller
-router.use("/users", userController);
+router.use("/user", userController);
 router.use("/work-exp", workExpController);
 router.use("/projects", ProjectController);
 

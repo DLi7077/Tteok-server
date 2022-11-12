@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       reply_to: {
         type: DataTypes.INTEGER,
+        defaultValue: null,
       },
     },
     {

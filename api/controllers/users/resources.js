@@ -132,7 +132,7 @@ async function userProfile(req, res, next, user_id) {
   const user = await User.findOne({
     where: { id: user_id },
   })
-    .then((user) => user.dataValues)
+    .then((user) => user.dataValues) 
     .catch(next);
 
   const activeResumePost = await retrieveResumePost(user.active_resume);

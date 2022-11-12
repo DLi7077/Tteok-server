@@ -29,6 +29,9 @@ module.exports = (sequelize, DataTypes) => {
       portfolio_url: {
         type: DataTypes.STRING,
       },
+      active_resume: {
+        type: DataTypes.INTEGER,
+      },
       description: {
         type: DataTypes.STRING,
       },

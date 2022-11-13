@@ -1,6 +1,6 @@
 const db = require("../../models");
 const _ = require("lodash");
-const { ResumePost, ResumeComment } = db;
+const { User, ResumePost, ResumeComment } = db;
 
 /**
  * @description Creates a resume post
@@ -10,12 +10,20 @@ const { ResumePost, ResumeComment } = db;
  * @returns {Promise<void>} callback to next function
  */
 async function createPost(req, res, next) {
+  // create resume post, then update user's active resume
   await ResumePost.create({
     user_id: _.get(req, "currentUser.id"),
     resume_url: req.body.resume_url,
   })
-    .then((post) => {
-      req.response = post.dataValues;
+    .then(async (post) => {
+      await User.update(
+        { active_resume: post.dataValues.id },
+        { where: { id: _.get(req, "currentUser.id") } }
+      )
+        .then(() => {
+          req.response = post.dataValues;
+        })
+        .catch(next);
     })
     .catch(next);
 

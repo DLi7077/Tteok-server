@@ -14,10 +14,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         validate: { notEmpty: true },
       },
-      job_title: {
-        type: DataTypes.STRING,
-        validate: { notEmpty: true },
-      },
       start_month: {
         type: DataTypes.INTEGER,
         validate: { notEmpty: true, min: 1, max: 12 },

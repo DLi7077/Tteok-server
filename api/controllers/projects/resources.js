@@ -13,7 +13,7 @@ async function create(req, res, next) {
   const project = req.body.project;
 
   await Project.create({
-    user_id: _.get(req,'currentUser.id'),
+    user_id: _.get(req, "currentUser.id"),
     title: project.title,
     brief: project.brief,
     start_month: project.start_month,

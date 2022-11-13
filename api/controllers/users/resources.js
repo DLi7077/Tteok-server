@@ -14,6 +14,7 @@ const { retrieveResumePost } = require("./utils");
  * @returns {Promise<void>} callback to next function
  */
 async function createUser(req, res, next) {
+  // hash password in database
   const saltRounds = 10;
   const encryptedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
@@ -41,6 +42,7 @@ async function createUser(req, res, next) {
  * @returns {Promise<void>} callback to next function
  */
 async function userLogin(req, res, next) {
+  // catch invalid inputs
   const email = _.get(req.body, "email");
   if (!email) {
     res.status(404).send("No email provided");
@@ -57,6 +59,7 @@ async function userLogin(req, res, next) {
   const incomingPassword = _.get(req.body, "password");
   const expectedPassword = _.get(user, "password");
 
+  // handle password comparison
   bcrypt.compare(incomingPassword, expectedPassword, (err, result) => {
     if (err || !result) {
       res.status(401);
@@ -64,6 +67,7 @@ async function userLogin(req, res, next) {
       return;
     }
 
+    // provide access token
     const accessToken = jwt.sign(
       _.pick(user, ["email", "id"]),
       process.env.AUTH_SECRET
@@ -73,7 +77,6 @@ async function userLogin(req, res, next) {
       ...user,
       accessToken: accessToken,
     };
-
     req.headers.authorization = `Bearer ${accessToken}`;
 
     next();
@@ -81,7 +84,7 @@ async function userLogin(req, res, next) {
 }
 
 /**
- * @description Authenticates a user
+ * @description Authenticates a user for route permission
  * @param {Request} req HTTP Request
  * @param {Request} res HTTP Response
  * @param {NextFunction} next The next function to call
@@ -96,11 +99,12 @@ async function authenticateToken(req, res, next) {
     return;
   }
 
+  // decrypt token for user information
   jwt.verify(token, process.env.AUTH_SECRET ?? "", async (err, user) => {
     if (err) {
       res.status(403).send("Invalid Token");
+      return;
     }
-
     req.currentUser = user;
 
     next();
@@ -128,11 +132,18 @@ async function findAll(req, res, next) {
   return next();
 }
 
+/**
+ * @description Retrieves a user's profile
+ * @param {Request} req HTTP Request
+ * @param {Request} res HTTP Response
+ * @param {NextFunction} next The next function to call
+ * @returns {Promise<void>} callback to next function
+ */
 async function userProfile(req, res, next, user_id) {
   const user = await User.findOne({
     where: { id: user_id },
   })
-    .then((user) => user.dataValues) 
+    .then((user) => user.dataValues)
     .catch(next);
 
   const activeResumePost = await retrieveResumePost(user.active_resume);

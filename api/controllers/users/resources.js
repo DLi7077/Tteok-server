@@ -2,7 +2,9 @@ const db = require("../../models");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
 const { User, WorkExperience, Project } = db;
+const { retrieveResumePost } = require("./utils");
 
 /**
  * @description Creates a user
@@ -130,8 +132,11 @@ async function userProfile(req, res, next, user_id) {
   const user = await User.findOne({
     where: { id: user_id },
   })
-    .then((user) => user.dataValues)
+    .then((user) => user.dataValues) 
     .catch(next);
+
+  const activeResumePost = await retrieveResumePost(user.active_resume);
+
   const workexps = await WorkExperience.findAll({
     where: { user_id: user_id },
   })
@@ -146,6 +151,7 @@ async function userProfile(req, res, next, user_id) {
 
   req.response = {
     user: user,
+    current_resume: activeResumePost,
     work_experiences: workexps,
     projects: projects,
   };
@@ -186,6 +192,7 @@ async function presentProfile(req, res) {
   res.status(200);
   res.json({
     profile: _.omit(req.response.user, omitFields),
+    current_resume: _.omit(req.response.current_resume, omitFields),
     work_experiences: req.response.work_experiences.map((exp) =>
       _.omit(exp, omitFields)
     ),

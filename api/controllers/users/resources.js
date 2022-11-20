@@ -30,7 +30,7 @@ async function createUser(req, res, next) {
       req.response = createdUser.dataValues;
     })
     .catch(next);
-
+ 
   return next();
 }
 

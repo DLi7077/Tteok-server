@@ -4,7 +4,6 @@ const { User, WorkExperience, Project, ResumePost, ResumeComment } = db;
 
 const USERS = [
   {
-    id: 1,
     username: "Butterriolu",
     email: "butterriolu@fakemail.com",
     password: "butterriolupassword",
@@ -13,7 +12,6 @@ const USERS = [
     description: "",
   },
   {
-    id: 2,
     username: "FBI Agent",
     email: "FBI Agent@fakemail.com",
     password: "FBIagentpassword",
@@ -46,7 +44,7 @@ const RESUME_COMMENTS = [
     user_id: 2,
     resume_post_id: 1,
     comment: "Nice one dude",
-  },
+  }, 
   {
     user_id: 2,
     resume_post_id: 1,

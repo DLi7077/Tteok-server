@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         validate: { notEmpty: true },
       },
+      title: {
+        type: DataTypes.STRING,
+        validate: { notEmpty: true },
+      },
       brief: {
         type: DataTypes.STRING,
         validate: { notEmpty: true },

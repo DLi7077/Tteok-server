@@ -1,66 +1,7 @@
 const db = require("./models");
 const bcrypt = require("bcrypt");
 const { User, WorkExperience, Project, ResumePost, ResumeComment } = db;
-
-const USERS = [
-  {
-    username: "Butterriolu",
-    email: "butterriolu@fakemail.com",
-    password: "butterriolupassword",
-    portfolio_url: "https://dli7077.github.io/portfolio/",
-    active_resume: 1,
-    description: "",
-  },
-  {
-    username: "FBI Agent",
-    email: "FBI Agent@fakemail.com",
-    password: "FBIagentpassword",
-    portfolio_url: "https://dli7077.github.io/portfolio/",
-    active_resume: 2,
-    description: "",
-  },
-];
-
-const RESUMES = [
-  {
-    user_id: 1,
-    resume_url:
-      "https://storage.googleapis.com/katsudon-assets/Devin%20L.%20Resume.pdf",
-  },
-  {
-    user_id: 2,
-    resume_url:
-      "https://storage.googleapis.com/katsudon-assets/Devin%20L.%20Resume.pdf",
-  },
-];
-
-const RESUME_COMMENTS = [
-  {
-    user_id: 2,
-    resume_post_id: 1,
-    comment: "Not bad",
-  },
-  {
-    user_id: 2,
-    resume_post_id: 1,
-    comment: "Nice one dude",
-  }, 
-  {
-    user_id: 2,
-    resume_post_id: 1,
-    comment: "Pretty good",
-  },
-  {
-    user_id: 2,
-    resume_post_id: 1,
-    comment: "Double columns is a sin",
-  },
-  {
-    user_id: 2,
-    resume_post_id: 1,
-    comment: "Idk man looks kinda",
-  },
-];
+const { USERS, RESUMES, RESUME_COMMENTS } = require("./constants/seeding");
 
 const WORKEXPS = [
   {
@@ -157,7 +98,7 @@ const seed = async function () {
   ];
   const tableResetTasks = tables.map((table) => {
     return db.sequelize.query(
-      `select setval('"${table}_id_seq"', (select max(id) from "${table}"), true);`
+      `select setval('"${table}_id_seq"',${table.length + 1}, true);`
     );
   });
 
